@@ -1,0 +1,14 @@
+.idea
+node_modules
+*.bak
+*.js
+*.jsx
+*.map
+*.rar
+*.zip
+*.exe
+*.dll
+*.pdf
+!webpack.config.js
+
+

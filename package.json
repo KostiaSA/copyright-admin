@@ -1,0 +1,27 @@
+{
+  "name": "copyright",
+  "version": "0.0.1",
+  "scripts": {
+    "run": "tsc && webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@types/bignumber.js": "^4.0.3",
+    "@types/bluebird": "^3.0.36",
+    "@types/jquery": "^2.0.34",
+    "@types/moment": "^2.13.0",
+    "@types/react": "^0.14.55",
+    "@types/react-dom": "^0.14.19",
+    "bignumber": "^1.1.0",
+    "bignumber.js": "^4.0.4",
+    "bluebird": "^3.4.6",
+    "jquery": "^3.1.1",
+    "moment": "^2.17.1",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "webpack": "^3.5.6"
+  },
+  "devDependencies": {
+    "json-loader": "^0.5.7"
+  }
+}

@@ -1,0 +1,1 @@
+solc copyright.sol --pretty-json --optimize --optimize-runs 200 --combined-json abi,bin > copyright.json
