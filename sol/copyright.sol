@@ -14,6 +14,15 @@ contract owned {
     function transferOwnership(address newOwner) public onlyOwner {
         owner = newOwner;
     }
+
+    function withdraw(uint amount) public onlyOwner {
+        if (amount > 0) {
+            owner.transfer(amount);
+        }
+        else {
+            owner.transfer(this.balance);
+        }
+    }
 }
 
 
@@ -25,15 +34,36 @@ contract CopyrightUser is owned {
     string id;
 
     address[] files;
+
+    // constructor
+    function CopyrightUser(address _owner, string _name, string _id) public {
+        require(msg.sender == storageAddress);
+
+        bytes memory __name = bytes(_name);
+        require(__name.length > 0);
+
+        bytes memory __id = bytes(_id);
+        require(__id.length <= 255);
+
+        owner = _owner;
+        name = _name;
+        id = _id;
+    }
+
+    function registerNewFile(string _fileName, string _description, bytes32 _hash) onlyOwner public {
+        CopyrightStorage storageContract = CopyrightStorage(storageAddress);
+        files.push(storageContract.registerNewFile(_fileName, _description, _hash));
+
+    }
 }
 
 
 contract CopyrightFile {
     address storageAddress = 0x0101010101010101010;
 
-    // constuctor
+    // constructor
     function CopyrightFile(address _author, string _fileName, string _description, bytes32 _hash) public {
-        require(msg.sender==storageAddress);
+        require(msg.sender == storageAddress);
 
         bytes memory __fileName = bytes(_fileName);
         require(__fileName.length > 0);
@@ -95,32 +125,25 @@ contract CopyrightStorage is owned {
 
     address[] filesByAddress;
 
-    //    // регистрация нового автора
-    //    function registerNewAuthor(address _authorAddr, string _name, string _id) public {
-    //        require(_authorAddr != 0x0);
-    //        bytes memory __name = bytes(_name);
-    //        require(__name.length > 0);
-    //
-    //        // проверка, что такого адреса нет в списке
-    //        require(!authors[_authorAddr].exists);
-    //
-    //        authors[_authorAddr] = User({
-    //        exists : true,
-    //        name : _name,
-    //        id : _id,
-    //        createDate : now
-    //        });
-    //
-    //
-    //    }
+    // регистрация нового автора
+    function registerNewUser(string _name, string _id) public returns (address newUser){
+
+        CopyrightUser userContract = new CopyrightUser(msg.sender, _name, _id);
+
+        users.push(userContract);
+
+        return userContract;
+
+    }
 
     // регистрация новой работы, регистрируется на msg.sender
-    function registerNewFile(string _fileName, string _description, bytes32 _hash) public {
+    function registerNewFile(string _fileName, string _description, bytes32 _hash) public returns (address newFileContract){
         // проверка, что такого хеша нет в хранилище
         require(filesByHash[_hash] == 0x0);
         CopyrightFile fileContract = new CopyrightFile(msg.sender, _fileName, _description, _hash);
         filesByHash[_hash] = fileContract;
         filesByAddress.push(fileContract);
+        return fileContract;
     }
 
 }
