@@ -17,76 +17,111 @@ contract owned {
 }
 
 
-contract CopyrightStorage is owned {
+contract CopyrightUser is owned {
+    address storageAddress = 0x0101010101010101010;
 
-    struct Author {
-    bool exists;
     string name;
+
     string id;
-    uint createDate;
-    }
 
-    struct File {
-    bool exists;
-    string fileName;
-    string description;
-//    bytes32 hash;
-    uint createDate;
-    }
-
-    mapping (address => Author) public authors;
-
-    mapping (bytes32 => File) public files;
-
-    function CopyrightStorage() public {
-
-    }
-
-    // регистрация нового автора
-    function registerNewAuthor(address _authorAddr, string _name, string _id) public {
-        require(_authorAddr != 0x0);
-        bytes memory __name = bytes(_name);
-        require(__name.length > 0);
-
-        // проверка, что такого адреса нет в списке
-        require(!authors[_authorAddr].exists);
-
-        authors[_authorAddr] = Author({
-        exists : true,
-        name : _name,
-        id : _id,
-        createDate : now
-        });
+    address[] files;
+}
 
 
-    }
+contract CopyrightFile {
+    address storageAddress = 0x0101010101010101010;
 
-    // регистрация новой работы, регистрируется на msg.sender
-    function registerNewFile(string _fileName, string _description, bytes32 _hash) public {
+    // constuctor
+    function CopyrightFile(address _author, string _fileName, string _description, bytes32 _hash) public {
+        require(msg.sender==storageAddress);
+
         bytes memory __fileName = bytes(_fileName);
         require(__fileName.length > 0);
 
         bytes memory __description = bytes(_description);
         require(__description.length <= 255);
 
-        //bytes memory __hash = bytes(_hash);
-        require(_hash.length == 32);
-
-        // проверка, что такого хеша нет в списке
-        require(!files[_hash].exists);
-
-        files[_hash] = File({
-        exists : true,
-        fileName : _fileName,
-        description : _description,
-        createDate : now
-        });
+        author = _author;
+        exclusiveRightsHolder = _author;
+        fileName = _fileName;
+        description = _description;
+        hash = _hash;
     }
+
+
+    enum OfferType {SellExclusiveRights, SellRightsToUse}
+
+    // оферта
+    struct Offer {
+    bool active;
+    OfferType offerType;
+    string description;
+    bytes32 paperHash;
+    address buyer;  // адрес покупателя, если это специальный договор для конкретного покупателя
+    }
+
+
+    struct RightToUse {
+    address user; // адрес CopyrightUser
+    uint dealDate;
+    uint dealAmount;
+    uint startDate;
+    uint stopDate;
+    string place;
+    string description;
+    uint offerIndex;
+    }
+
+    address author;  // адрес CopyrightUser
+    address exclusiveRightsHolder;  // адрес CopyrightUser
+    string fileName;
+
+    string description;
+
+    bytes32 hash;
+
+    Offer[] offers;
+
+    RightToUse[] rights;
 
 }
 
 
-contract CopyrightAuthor is owned {
+contract CopyrightStorage is owned {
+
+    address[] users;
+
+    mapping (bytes32 => address) public filesByHash;
+
+    address[] filesByAddress;
+
+    //    // регистрация нового автора
+    //    function registerNewAuthor(address _authorAddr, string _name, string _id) public {
+    //        require(_authorAddr != 0x0);
+    //        bytes memory __name = bytes(_name);
+    //        require(__name.length > 0);
+    //
+    //        // проверка, что такого адреса нет в списке
+    //        require(!authors[_authorAddr].exists);
+    //
+    //        authors[_authorAddr] = User({
+    //        exists : true,
+    //        name : _name,
+    //        id : _id,
+    //        createDate : now
+    //        });
+    //
+    //
+    //    }
+
+    // регистрация новой работы, регистрируется на msg.sender
+    function registerNewFile(string _fileName, string _description, bytes32 _hash) public {
+        // проверка, что такого хеша нет в хранилище
+        require(filesByHash[_hash] == 0x0);
+        CopyrightFile fileContract = new CopyrightFile(msg.sender, _fileName, _description, _hash);
+        filesByHash[_hash] = fileContract;
+        filesByAddress.push(fileContract);
+    }
 
 }
 
