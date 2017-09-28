@@ -26,200 +26,154 @@ contract owned {
 }
 
 
-contract CopyrightUser is owned {
-    address storageAddress = 0x0101010101010101010;
-
-    string name;
-
-    string id;
-
-    address[] files;
-
-    // constructor
-    function CopyrightUser(address _owner, string _name, string _id) public {
-        require(msg.sender == storageAddress);
-
-        bytes memory __name = bytes(_name);
-        require(__name.length > 0);
-
-        bytes memory __id = bytes(_id);
-        require(__id.length <= 255);
-
-        owner = _owner;
-        name = _name;
-        id = _id;
-    }
-
-    function registerNewFile(string _fileName, string _description, bytes32 _hash) onlyOwner public {
-        CopyrightStorage storageContract = CopyrightStorage(storageAddress);
-        files.push(storageContract.registerNewFile(_fileName, _description, _hash));
-
-    }
-}
-
-
-contract CopyrightFile {
-    address storageAddress = 0x0101010101010101010;
-
-    // constructor
-    function CopyrightFile(address _author, string _fileName, string _description, bytes32 _hash) public {
-        require(msg.sender == storageAddress);
-
-        bytes memory __fileName = bytes(_fileName);
-        require(__fileName.length > 0);
-
-        bytes memory __description = bytes(_description);
-        require(__description.length <= 255);
-
-        author = _author;
-        exclusiveRightsHolder = _author;
-        fileName = _fileName;
-        description = _description;
-        hash = _hash;
-    }
-
-
-    enum OfferType {SellExclusiveRights, SellRightsToUse}
-
-    // оферта
-    struct Offer {
-    bool active;
-    OfferType offerType;
-    string description;
-    bytes32 paperHash;
-    address buyer;  // адрес покупателя, если это специальный договор для конкретного покупателя
-    }
-
-
-    struct RightToUse {
-    address user; // адрес CopyrightUser
-    uint dealDate;
-    uint dealAmount;
-    uint startDate;
-    uint stopDate;
-    string place;
-    string description;
-    uint offerIndex;
-    }
-
-    address author;  // адрес CopyrightUser
-    address exclusiveRightsHolder;  // адрес CopyrightUser
-    string fileName;
-
-    string description;
-
-    bytes32 hash;
-
-    Offer[] offers;
-
-    RightToUse[] rights;
-
-}
+//contract CopyrightUser is owned {
+//    address  public storageAddress;
+//
+//    string  public name;
+//
+//    string  public id;
+//
+//    address[]  public files;
+//
+//    // constructor
+//    function CopyrightUser(address _owner, string _name, string _id) public {
+//        storageAddress = msg.sender;
+//
+//        bytes memory __name = bytes(_name);
+//        require(__name.length > 0);
+//
+//        bytes memory __id = bytes(_id);
+//        require(__id.length <= 255);
+//
+//        owner = _owner;
+//        name = _name;
+//        id = _id;
+//    }
+//
+//    function registerNewFile(string _fileName, string _description, bytes32 _hash) onlyOwner public {
+//        CopyrightStorage storageContract = CopyrightStorage(storageAddress);
+//        files.push(storageContract.registerNewFile(_fileName, _description, _hash));
+//
+//    }
+//}
+//
+//
+//contract CopyrightFile {
+//    address  public storageAddress;
+//
+//    // constructor
+//    function CopyrightFile(address _author, string _fileName, string _description, bytes32 _hash) public {
+//        storageAddress = msg.sender;
+//
+//        bytes memory __fileName = bytes(_fileName);
+//        require(__fileName.length > 0);
+//
+//        bytes memory __description = bytes(_description);
+//        require(__description.length <= 255);
+//
+//        author = _author;
+//        exclusiveRightsHolder = _author;
+//        fileName = _fileName;
+//        description = _description;
+//        hash = _hash;
+//    }
+//
+//
+//    enum OfferType {SellExclusiveRights, SellRightsToUse}
+//
+//    // оферта
+//    struct Offer {
+//    bool active;
+//    OfferType offerType;
+//    string description;
+//    bytes32 paperHash;
+//    address buyer;  // адрес покупателя, если это специальный договор для конкретного покупателя
+////    mapping (RightToUse => address) filesByHash;
+//    }
+//
+//
+//    struct RightToUse {
+//    address user; // адрес CopyrightUser
+//    uint dealDate;
+//    uint dealAmount;
+//    uint startDate;
+//    uint stopDate;
+//    string place;
+//    string description;
+//    uint offerIndex;
+//    }
+//
+//    address  public author;  // адрес CopyrightUser
+//    address  public exclusiveRightsHolder;  // адрес CopyrightUser
+//    string  public fileName;
+//
+//    string  public description;
+//
+//    bytes32  public hash;
+//
+//    Offer[] public offers;
+//
+//    RightToUse[] public rights;
+//
+//}
 
 
 contract CopyrightStorage is owned {
 
-    address[] users;
+    // пользователь, автор или исполнитель
+    struct User {
+    address account;
+    string name;
+    string info;
+    uint32 createDate;  // дата создания
+    uint64[] exclusiveRights;
+    }
 
-    mapping (bytes32 => address) public filesByHash;
+    mapping (address => uint64) public userByAccount;
 
-    address[] filesByAddress;
+    User[] public  users;
+
+
+    struct File {
+    uint64 author;  // индекс User-а
+    uint32 createDate;  // дата создания
+    uint64 exclusiveRightsHolder;  // индекс деражателя экс прав.
+    string fileName;
+    string description;
+    bytes32 fileHash;
+    //    Offer[] public offers;
+    //    RightToUse[] public rights;
+    }
+
+    File[] public files;
+
+    mapping (bytes32 => int64) public fileByHash;
+
 
     // регистрация нового автора
-    function registerNewUser(string _name, string _id) public returns (address newUser){
-
-        CopyrightUser userContract = new CopyrightUser(msg.sender, _name, _id);
-
-        users.push(userContract);
-
-        return userContract;
+    function registerNewUser(string _name, string _info) public returns (uint64 newUserIndex){
+        User memory newUser = User({
+        account : msg.sender,
+        name : _name,
+        info : _info,
+        createDate : uint32(now),
+        exclusiveRights:new uint64[](0)
+        });
+        newUserIndex = uint64(users.push(newUser) - 1);
+        userByAccount[msg.sender] = newUserIndex;
 
     }
 
     // регистрация новой работы, регистрируется на msg.sender
-    function registerNewFile(string _fileName, string _description, bytes32 _hash) public returns (address newFileContract){
-        // проверка, что такого хеша нет в хранилище
-        require(filesByHash[_hash] == 0x0);
-        CopyrightFile fileContract = new CopyrightFile(msg.sender, _fileName, _description, _hash);
-        filesByHash[_hash] = fileContract;
-        filesByAddress.push(fileContract);
-        return fileContract;
-    }
+    //    function registerNewFile(string _fileName, string _description, bytes32 _hash) public returns (address newFileContract){
+    //        // проверка, что такого хеша нет в хранилище
+    //        require(filesByHash[_hash] == 0x0);
+    //        CopyrightFile fileContract = new CopyrightFile(msg.sender, _fileName, _description, _hash);
+    //        filesByHash[_hash] = fileContract;
+    //        filesByAddress.push(fileContract);
+    //        return fileContract;
+    //    }
 
 }
 
 
-//contract HonestFucker {
-//
-//    address HonestDiceAddr = 0x96be52168132a47d00e0230853C9EB784C3eedf8;
-//
-//    bytes32 rollHash = 0x09cec53b08eaf2fffaa28faf854fa516f11632cede427ee32c9acb36e2ab8883;
-//
-//
-//    address public owner;
-//
-//    uint8 public payableCounter;
-//
-//    function HonestFucker(){
-//        owner = msg.sender;
-//    }
-//
-//    function withdraw() {
-//        assert(msg.sender == owner);
-//        suicide(owner);
-//    }
-//
-//    function doRoll() external {
-//        HonestDice h = HonestDice(HonestDiceAddr);
-//        h.roll.value(1 ether).gas(1000000)(255, sha3(rollHash));
-//    }
-//
-//
-//    function doFuckClaim() public {
-//        HonestDice h = HonestDice(HonestDiceAddr);
-//        h.claim.gas(1000000)(rollHash);
-//    }
-//
-//    function doFuckTimeout() public {
-//        HonestDice h = HonestDice(HonestDiceAddr);
-//        h.claimTimeout.gas(1000000)();
-//    }
-//
-////    function() payable {
-////        if (msg.value <= 1 ether) {// если больше 1, то это просто мое пополнение 22
-////
-////            payableCounter += 1;
-////
-////            if (payableCounter < 5) {
-////                if (msg.value == 1 ether) {// ветка timeout
-////                    doFuckTimeout();
-////                }
-////                else
-////                {
-////                    doFuckClaim();  // ветка claim
-////                }
-////            }
-////
-////            payableCounter -= 1;
-////        }
-////    }
-//
-//    function() payable {
-//        if (msg.value <= 1 ether) {// если больше 1, то это просто мое пополнение 22
-//
-//            payableCounter += 1;
-//
-//            if (payableCounter < 5) {
-//                if (msg.value == 1 ether) {// ветка timeout
-//                    doFuckTimeout();
-//                }
-//                else
-//                {
-//                    doFuckClaim();  // ветка claim
-//                }
-//            }
-//
-//            payableCounter -= 1;
-//        }
-//    }
-//}

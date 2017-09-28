@@ -1,0 +1,2 @@
+export const buhtaAdminAccount="0xB99A8EF9929b6105e0A0E519048e658b31f2cc73";
+export const deployedCopyrightStorageAddress="0xf9cc5e2d81959d624fa0a269ac557d3bf172ffd9";

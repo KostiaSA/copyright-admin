@@ -14,6 +14,8 @@
     //    "reactNamespace": "__React"
     "lib": ["es6","dom"],
     "skipLibCheck": true,
+    "types": ["node"]
+
 
   },
 //  "include": [
