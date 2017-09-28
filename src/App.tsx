@@ -98,7 +98,7 @@ export class App extends React.Component<any, any> {
         let contract = appState.getContractAtAddress(deployedCopyrightStorageAddress, appState.getContractAbi("CopyrightStorage"));
         console.log(contract);
 
-        let tx = await contract.registerNewUser("Иван Драго", "id=9457839349", {
+        let tx = await contract.registerNewUser("Иван Драго 2", "id=9457839349", {
             from: buhtaAdminAccount,
             value: 0,
             gas: 1000000

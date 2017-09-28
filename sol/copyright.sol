@@ -120,6 +120,18 @@ contract owned {
 
 contract CopyrightStorage is owned {
 
+    function CopyrightStorage() public {
+        // занимаем users[0], чтобы индексация шла с единицы
+        User memory fakeUser = User({
+        account : msg.sender,
+        name : "fake user",
+        info : "",
+        createDate : uint32(now),
+        exclusiveRights : new uint64[](0)
+        });
+        users.push(fakeUser);
+    }
+
     // пользователь, автор или исполнитель
     struct User {
     address account;
@@ -137,9 +149,10 @@ contract CopyrightStorage is owned {
     struct File {
     uint64 author;  // индекс User-а
     uint32 createDate;  // дата создания
-    uint64 exclusiveRightsHolder;  // индекс деражателя экс прав.
+    uint64 exclusiveRightsHolder;  // индекс держателя экс прав.
     string fileName;
     string description;
+    string info;
     bytes32 fileHash;
     //    Offer[] public offers;
     //    RightToUse[] public rights;
@@ -151,17 +164,19 @@ contract CopyrightStorage is owned {
 
 
     // регистрация нового автора
-    function registerNewUser(string _name, string _info) public returns (uint64 newUserIndex){
-        User memory newUser = User({
-        account : msg.sender,
-        name : _name,
-        info : _info,
-        createDate : uint32(now),
-        exclusiveRights:new uint64[](0)
-        });
-        newUserIndex = uint64(users.push(newUser) - 1);
-        userByAccount[msg.sender] = newUserIndex;
-
+    function registerNewUser(string _name, string _info) public returns (int64 newUserIndex){
+        newUserIndex = - 1;
+        if (userByAccount[msg.sender] == 0) {
+            User memory newUser = User({
+            account : msg.sender,
+            name : _name,
+            info : _info,
+            createDate : uint32(now),
+            exclusiveRights : new uint64[](0)
+            });
+            newUserIndex = int64(users.push(newUser) - 1);
+            userByAccount[msg.sender] = uint64(newUserIndex);
+        }
     }
 
     // регистрация новой работы, регистрируется на msg.sender
